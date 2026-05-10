@@ -1,110 +1,98 @@
 import streamlit as st
 import pandas as pd
-import requests
-from io import StringIO
+from streamlit_gsheets import GSheetsConnection
 
-# 1. Page Configuration
-st.set_page_config(page_title="Predict & Earn | Official", page_icon="💰", layout="wide")
+# 1. Page Config
+st.set_page_config(page_title="Predict & Earn | Pro", page_icon="💰", layout="wide")
 
-# 2. Database Link
-# Note: Using direct CSV export to bypass "Secrets" connection errors
-SHEET_ID = "1EWrF_vJOIXyN7Y03t6rVECmY_YijC3nping9DoNnC-4"
-READ_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
+# 2. Connection
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=5)
-def fetch_users():
-    try:
-        response = requests.get(READ_URL)
-        if response.status_code == 200:
-            data = pd.read_csv(StringIO(response.text))
-            data.columns = [c.strip().lower() for c in data.columns]
-            return data
-        return pd.DataFrame()
-    except:
-        return pd.DataFrame()
+def load_data():
+    # TTL=0 taake har baar naya data aaye
+    return conn.read(worksheet="Sheet1", ttl=0)
 
-df = fetch_users()
+try:
+    df = load_data()
+    df.columns = [c.strip().lower() for c in df.columns]
+except:
+    st.error("Database connection failed. Check your Secrets.")
+    st.stop()
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-# --- UI Layout ---
+# --- UI ---
 st.title("🎯 Predict & Earn Rewards")
-st.markdown("---")
 
-# Sidebar
 st.sidebar.header("Member Access")
 
 if not st.session_state.logged_in:
     tab_login, tab_reg = st.sidebar.tabs(["Login", "Register"])
     
     with tab_reg:
-        st.subheader("Direct Registration")
-        st.image("https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg", width=200)
+        st.subheader("Create Account")
+        new_name = st.text_input("Full Name", key="reg_name")
+        new_phone = st.text_input("Mobile Number", key="reg_phone")
+        new_pass = st.text_input("Create Password", type="password", key="reg_pass")
         
-        # Registration Form
-        r_name = st.text_input("Full Name", key="reg_name")
-        r_phone = st.text_input("EasyPaisa Number", key="reg_phone")
-        r_pass = st.text_input("Set Password", type="password", key="reg_pass")
-        
-        st.info("💡 Tip: Use your EasyPaisa number for faster withdrawals.")
-        
-        if st.button("Submit Registration", use_container_width=True, type="primary"):
-            if r_name and r_phone and r_pass:
-                # Redirecting to Admin for instant manual entry into Sheet
-                # This prevents "Connection 400 Error" while writing
-                st.success("Registration details captured!")
-                st.markdown(f"""
-                ### ✅ Step 2: Finalize Registration
-                Please send a screenshot or your number to our Admin for instant activation and **PKR 30 Bonus**.
-                
-                **Admin WhatsApp/EasyPaisa:** `03415687754`
-                """)
+        if st.button("Register Now", use_container_width=True):
+            if new_name and new_phone and new_pass:
+                # Phone check as string
+                if str(new_phone).strip() in df['phone'].astype(str).str.strip().values:
+                    st.warning("This number is already registered.")
+                else:
+                    new_data = pd.DataFrame([{
+                        "name": new_name,
+                        "phone": str(new_phone).strip(),
+                        "password": str(new_pass).strip(),
+                        "balance": 30
+                    }])
+                    updated_df = pd.concat([df, new_data], ignore_index=True)
+                    conn.update(worksheet="Sheet1", data=updated_df)
+                    st.success("Registered! Now go to Login tab.")
             else:
-                st.error("Please fill all fields.")
+                st.error("Fill all fields.")
 
     with tab_login:
-        st.subheader("Login to Dashboard")
+        st.subheader("Login")
         l_phone = st.text_input("Mobile Number", key="login_phone")
         l_pass = st.text_input("Password", type="password", key="login_pass")
         
-        if st.button("Sign In Securely", type="primary", use_container_width=True):
-            if not df.empty:
-                df['phone'] = df['phone'].astype(str).str.strip()
-                df['password'] = df['password'].astype(str).str.strip()
-                
-                user = df[(df['phone'] == str(l_phone).strip()) & (df['password'] == str(l_pass).strip())]
-                
-                if not user.empty:
-                    st.session_state.logged_in = True
-                    st.session_state.user_name = user.iloc[0]['name']
-                    st.session_state.balance = user.iloc[0]['balance']
-                    st.rerun()
-                else:
-                    st.error("Invalid credentials. If you are new, please Register first.")
+        if st.button("Sign In", type="primary", use_container_width=True):
+            # --- IMPROVED LOGIN LOGIC ---
+            # 1. Convert everything to string
+            # 2. Remove any extra spaces (strip)
+            # 3. Ensure '0' at the start doesn't cause issues
+            
+            input_phone = str(l_phone).strip()
+            input_pass = str(l_pass).strip()
+            
+            temp_df = df.copy()
+            temp_df['phone'] = temp_df['phone'].astype(str).str.strip()
+            temp_df['password'] = temp_df['password'].astype(str).str.strip()
+            
+            user = temp_df[(temp_df['phone'] == input_phone) & (temp_df['password'] == input_pass)]
+            
+            if not user.empty:
+                st.session_state.logged_in = True
+                st.session_state.user_name = user.iloc[0]['name']
+                st.session_state.balance = user.iloc[0]['balance']
+                st.rerun()
             else:
-                st.error("Database connection error. Try again later.")
+                st.error("Invalid credentials. Check your number/password or Register again.")
 
-else: # --- LOGGED IN DASHBOARD ---
+else:
     st.sidebar.success(f"Welcome, {st.session_state.user_name}!")
-    st.sidebar.metric("Your Balance", f"PKR {st.session_state.balance}")
+    st.sidebar.metric("Balance", f"PKR {st.session_state.balance}")
     
     if st.sidebar.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
 
-    st.header("🔥 Daily Challenge")
-    st.subheader("Will the Bitcoin price be above $62,000 in the next 1 hour?")
+    st.header("Today's Prediction")
+    st.subheader("Will the Bitcoin price stay above $62,000?")
+    stake = st.select_slider("Stake (PKR):", options=[10, 20, 50, 100])
     
-    stake = st.select_slider("Select Stake (PKR):", options=[10, 20, 50, 100])
-    
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("YES - Above", use_container_width=True, type="primary"):
-            st.success(f"Prediction Locked! Amount Staked: PKR {stake}")
-    with c2:
-        if st.button("NO - Below", use_container_width=True):
-            st.warning(f"Prediction Locked! Amount Staked: PKR {stake}")
-
-    st.divider()
-    st.write(f"📢 For deposits/withdrawals, contact Admin at: **03415687754**")
+    if st.button("Submit Prediction", type="primary"):
+        st.success(f"Prediction locked for PKR {stake}!")
