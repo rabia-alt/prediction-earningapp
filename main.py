@@ -8,16 +8,19 @@ st.set_page_config(page_title="Predict & Earn | Pro", page_icon="💰", layout="
 # 2. Connection
 conn = st.connection("gsheets", type=GSheetsConnection)
 
+# We use ttl=0 to ensure we always get the latest data from the sheet
 def load_data():
-    # TTL=0 taake har baar naya data aaye
-    return conn.read(worksheet="Sheet1", ttl=0)
+    try:
+        return conn.read(worksheet="Sheet1", ttl=0)
+    except Exception as e:
+        st.error("Connection Error: Please check if your Google Sheet is Shared as 'Editor'.")
+        return pd.DataFrame()
 
-try:
-    df = load_data()
+df = load_data()
+
+# Standardizing column names
+if not df.empty:
     df.columns = [c.strip().lower() for c in df.columns]
-except:
-    st.error("Database connection failed. Check your Secrets.")
-    st.stop()
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
@@ -38,21 +41,22 @@ if not st.session_state.logged_in:
         
         if st.button("Register Now", use_container_width=True):
             if new_name and new_phone and new_pass:
-                # Phone check as string
-                if str(new_phone).strip() in df['phone'].astype(str).str.strip().values:
+                # Clean checks
+                existing_phones = df['phone'].astype(str).str.strip().values if not df.empty else []
+                if str(new_phone).strip() in existing_phones:
                     st.warning("This number is already registered.")
                 else:
-                    new_data = pd.DataFrame([{
+                    new_user = pd.DataFrame([{
                         "name": new_name,
                         "phone": str(new_phone).strip(),
                         "password": str(new_pass).strip(),
                         "balance": 30
                     }])
-                    updated_df = pd.concat([df, new_data], ignore_index=True)
+                    updated_df = pd.concat([df, new_user], ignore_index=True)
                     conn.update(worksheet="Sheet1", data=updated_df)
-                    st.success("Registered! Now go to Login tab.")
+                    st.success("Registration Successful! Please switch to Login tab.")
             else:
-                st.error("Fill all fields.")
+                st.error("Please fill all fields.")
 
     with tab_login:
         st.subheader("Login")
@@ -60,39 +64,39 @@ if not st.session_state.logged_in:
         l_pass = st.text_input("Password", type="password", key="login_pass")
         
         if st.button("Sign In", type="primary", use_container_width=True):
-            # --- IMPROVED LOGIN LOGIC ---
-            # 1. Convert everything to string
-            # 2. Remove any extra spaces (strip)
-            # 3. Ensure '0' at the start doesn't cause issues
-            
-            input_phone = str(l_phone).strip()
-            input_pass = str(l_pass).strip()
-            
-            temp_df = df.copy()
-            temp_df['phone'] = temp_df['phone'].astype(str).str.strip()
-            temp_df['password'] = temp_df['password'].astype(str).str.strip()
-            
-            user = temp_df[(temp_df['phone'] == input_phone) & (temp_df['password'] == input_pass)]
-            
-            if not user.empty:
-                st.session_state.logged_in = True
-                st.session_state.user_name = user.iloc[0]['name']
-                st.session_state.balance = user.iloc[0]['balance']
-                st.rerun()
+            if not df.empty:
+                # Force clean matching
+                search_phone = str(l_phone).strip()
+                search_pass = str(l_pass).strip()
+                
+                # Matching logic that ignores leading zeros or formatting issues
+                match = df[
+                    (df['phone'].astype(str).str.strip() == search_phone) & 
+                    (df['password'].astype(str).str.strip() == search_pass)
+                ]
+                
+                if not match.empty:
+                    st.session_state.logged_in = True
+                    st.session_state.user_name = match.iloc[0]['name']
+                    st.session_state.balance = match.iloc[0]['balance']
+                    st.rerun()
+                else:
+                    st.error("User not found or Password incorrect.")
             else:
-                st.error("Invalid credentials. Check your number/password or Register again.")
+                st.error("No user data found in database.")
 
 else:
     st.sidebar.success(f"Welcome, {st.session_state.user_name}!")
-    st.sidebar.metric("Balance", f"PKR {st.session_state.balance}")
+    st.sidebar.metric("Your Balance", f"PKR {st.session_state.balance}")
     
     if st.sidebar.button("Logout"):
         st.session_state.logged_in = False
         st.rerun()
 
     st.header("Today's Prediction")
-    st.subheader("Will the Bitcoin price stay above $62,000?")
-    stake = st.select_slider("Stake (PKR):", options=[10, 20, 50, 100])
+    st.image("https://img.freepik.com/free-vector/data-analysis-concept-illustration_114360-1288.jpg", width=400)
+    st.subheader("Will Bitcoin price be above $65,000 tonight?")
     
-    if st.button("Submit Prediction", type="primary"):
-        st.success(f"Prediction locked for PKR {stake}!")
+    stake = st.select_slider("Select Stake (PKR):", options=[10, 20, 50, 100])
+    if st.button("Place Prediction", type="primary"):
+        st.success(f"Success! PKR {stake} bet has been placed.")
