@@ -1,103 +1,91 @@
 import streamlit as st
 import pandas as pd
-from streamlit_gsheets import GSheetsConnection
+import requests
+from io import StringIO
 
-# 1. Page Config
-st.set_page_config(page_title="Predict & Earn | Pro", page_icon="💰", layout="wide")
+# 1. Page Configuration
+st.set_page_config(page_title="Predict & Earn | Official", page_icon="💰", layout="wide")
 
-# 2. Establish Connection
-conn = st.connection("gsheets", type=GSheetsConnection)
+# 2. Direct Database Connection (Replacing Secrets)
+SHEET_ID = "1EWrF_vJOIXyN7Y03t6rVECmY_YijC3nping9DoNnC-4"
+# Export URL for reading data
+READ_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
 
-# Function to load data
-def load_data():
-    return conn.read(worksheet="Sheet1", ttl=0)
+@st.cache_data(ttl=5)
+def fetch_database():
+    try:
+        response = requests.get(READ_URL)
+        if response.status_code == 200:
+            data = pd.read_csv(StringIO(response.text))
+            # Automatically convert column headers to lowercase
+            data.columns = [c.strip().lower() for c in data.columns]
+            return data
+        return pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
 
-# Load existing data
-try:
-    df = load_data()
-    # Clean column names
-    df.columns = [c.strip().lower() for c in df.columns]
-except Exception as e:
-    st.error("Database connection failed. Please check your Secrets and Sheet permissions.")
-    st.stop()
+# Load data
+df = fetch_database()
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
-# --- App Interface ---
+# --- App Header ---
 st.title("🎯 Predict & Earn Rewards")
+st.markdown("---")
 
-# Sidebar
+# --- Sidebar Controls ---
 st.sidebar.header("Member Access")
 
 if not st.session_state.logged_in:
     tab_login, tab_reg = st.sidebar.tabs(["Login", "Register"])
     
-    with tab_reg: # --- AUTOMATIC REGISTRATION ---
-        st.subheader("Create Account")
-        new_name = st.text_input("Full Name", key="reg_name")
-        new_phone = st.text_input("Mobile Number", key="reg_phone")
-        new_pass = st.text_input("Create Password", type="password", key="reg_pass")
-        
-        if st.button("Register & Get PKR 30", use_container_width=True):
-            if new_phone in df['phone'].astype(str).values:
-                st.warning("This number is already registered. Please Login.")
-            elif new_name and new_phone and new_pass:
-                # Add new user to the list
-                new_data = pd.DataFrame([{
-                    "name": new_name,
-                    "phone": str(new_phone),
-                    "password": str(new_pass),
-                    "balance": 30
-                }])
-                updated_df = pd.concat([df, new_data], ignore_index=True)
-                
-                # Save back to Google Sheets
-                conn.update(worksheet="Sheet1", data=updated_df)
-                st.success("Registration Successful! You can now Login.")
-                st.balloons()
-            else:
-                st.error("Please fill all details correctly.")
+    with tab_reg:
+        st.subheader("Join the Platform")
+        st.image("https://img.freepik.com/free-vector/sign-up-concept-illustration_114360-7885.jpg", width=200)
+        st.info("Registration is currently managed by Admin for security. Please send your details via WhatsApp.")
 
-    with tab_login: # --- DIRECT LOGIN ---
-        st.subheader("Login")
+    with tab_login:
+        st.subheader("Account Login")
         l_phone = st.text_input("Mobile Number", key="login_phone")
         l_pass = st.text_input("Password", type="password", key="login_pass")
         
-        if st.button("Sign In", type="primary", use_container_width=True):
-            # Clean data for matching
-            df['phone'] = df['phone'].astype(str).str.strip()
-            df['password'] = df['password'].astype(str).str.strip()
-            
-            user = df[(df['phone'] == str(l_phone).strip()) & (df['password'] == str(l_pass).strip())]
-            
-            if not user.empty:
-                st.session_state.logged_in = True
-                st.session_state.user_name = user.iloc[0]['name']
-                st.session_state.balance = user.iloc[0]['balance']
-                st.session_state.user_phone = str(l_phone)
-                st.rerun()
+        if st.button("Sign In Now", type="primary", use_container_width=True):
+            if not df.empty and 'phone' in df.columns:
+                # Clean strings for exact matching
+                df['phone'] = df['phone'].astype(str).str.strip()
+                df['password'] = df['password'].astype(str).str.strip()
+                
+                user_match = df[(df['phone'] == str(l_phone).strip()) & (df['password'] == str(l_pass).strip())]
+                
+                if not user_match.empty:
+                    st.session_state.logged_in = True
+                    st.session_state.user_name = user_match.iloc[0]['name']
+                    st.session_state.balance = user_match.iloc[0]['balance']
+                    st.rerun()
+                else:
+                    st.error("Invalid credentials. Please check your number or password.")
             else:
-                st.error("Invalid credentials. Try again.")
+                st.error("Database connection issue. Please ensure your Sheet has headers.")
 
 else: # --- DASHBOARD ---
     st.sidebar.success(f"Welcome, {st.session_state.user_name}!")
-    st.sidebar.metric("Wallet Balance", f"PKR {st.session_state.balance}")
+    st.sidebar.metric("Your Balance", f"PKR {st.session_state.balance}")
     
-    if st.sidebar.button("Logout"):
+    if st.sidebar.button("Logout", use_container_width=True):
         st.session_state.logged_in = False
         st.rerun()
 
-    st.header("Today's Prediction")
+    st.header("🔥 Today's Prediction")
     st.image("https://img.freepik.com/free-vector/data-analysis-concept-illustration_114360-1288.jpg", width=400)
     
-    st.subheader("Will Gold price increase today?")
-    stake = st.select_slider("Stake Amount (PKR):", options=[10, 20, 50, 100])
+    st.subheader("Will the Bitcoin price cross $65,000 tonight?")
+    stake = st.select_slider("Select Stake (PKR):", options=[10, 20, 50, 100])
     
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("YES - Increase", use_container_width=True, type="primary"):
-            st.success(f"Prediction Recorded: YES (PKR {stake})")
+        if st.button("YES", use_container_width=True, type="primary"):
+            st.success(f"Prediction Locked: YES (PKR {stake})")
     with c2:
-        if st.button("NO - Decrease", use_container_width=True):
-            st.warning(f"Prediction Recorded: NO (PKR {stake})")
+        if st.button("NO", use_container_width=True):
+            st.warning(f"Prediction Locked: NO (PKR {stake})")
