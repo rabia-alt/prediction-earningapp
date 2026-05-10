@@ -7,53 +7,53 @@ from io import StringIO
 st.set_page_config(page_title="Predict & Earn", page_icon="💰")
 
 # 2. Google Sheet CSV Export Link
-# Hum Sheet ko as a CSV parhen ge, is se error nahi ata
 SHEET_ID = "1EWrF_vJOIXyN7Y03t6rVECmY_YijC3nping9DoNnC-4"
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
 
-# Function to get data
 def get_data():
-    response = requests.get(SHEET_URL)
-    if response.status_code == 200:
-        return pd.read_csv(StringIO(response.text))
-    else:
-        st.error("Google Sheet se data nahi mil raha!")
+    try:
+        response = requests.get(SHEET_URL)
+        if response.status_code == 200:
+            return pd.read_csv(StringIO(response.text))
+        return pd.DataFrame()
+    except:
         return pd.DataFrame()
 
-# Load Data
 df = get_data()
 
-# Basic Setup
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
 st.title("🎯 Prediction & Reward App")
 
-# Sidebar
 st.sidebar.header("User Panel")
 
 if not st.session_state.logged_in:
     tab1, tab2 = st.sidebar.tabs(["Login", "Sign Up"])
     
-    with tab2:
+    with tab2: # --- SIGN UP ---
         st.subheader("Naya Account")
-        n_name = st.text_input("Naam")
-        n_phone = st.text_input("Mobile No")
-        n_pass = st.text_input("Password", type="password")
+        n_name = st.text_input("Naam", key="signup_name")
+        # Yahan humne key badal di hai
+        n_phone = st.text_input("Mobile No", key="signup_phone")
+        n_pass = st.text_input("Password", type="password", key="signup_pass")
         
-        if st.button("Register Now"):
-            st.info("Note: Registration ke liye Admin ko WhatsApp karen taake wo aapka data sheet mein add karde.")
-            st.write("Aapka Number:", n_phone)
+        if st.button("Register Now", key="signup_btn"):
+            st.info("Registration ke liye Admin se rabta karen.")
 
-    with tab1:
+    with tab1: # --- LOGIN ---
         st.subheader("Login")
-        l_phone = st.text_input("Mobile No")
-        l_pass = st.text_input("Password", type="password")
+        # Yahan bhi unique key laga di hai
+        l_phone = st.text_input("Mobile No", key="login_phone")
+        l_pass = st.text_input("Password", type="password", key="login_pass")
         
-        if st.button("Login"):
-            # Check if user exists in Sheet
+        if st.button("Login", key="login_btn"):
             if not df.empty and 'phone' in df.columns:
-                user = df[(df['phone'].astype(str) == str(l_phone)) & (df['password'].astype(str) == str(l_pass))]
+                # Convert to string for matching
+                df['phone'] = df['phone'].astype(str)
+                df['password'] = df['password'].astype(str)
+                
+                user = df[(df['phone'] == str(l_phone)) & (df['password'] == str(l_pass))]
                 if not user.empty:
                     st.session_state.logged_in = True
                     st.session_state.user_name = user.iloc[0]['name']
@@ -62,7 +62,7 @@ if not st.session_state.logged_in:
                 else:
                     st.error("Ghalat Password ya Number!")
             else:
-                st.error("Sheet khali hai ya data format ghalat hai!")
+                st.error("Data load nahi ho raha!")
 
 else:
     st.sidebar.success(f"Welcome {st.session_state.user_name}")
@@ -73,6 +73,6 @@ else:
         st.rerun()
 
     st.header("Aaj ka Sawal")
-    st.write("Kya aaj baarish hogi?")
+    st.write("Kya aaj Pakistan match jeetay ga?")
     if st.button("YES"):
         st.success("Bet Lag Gayi!")
