@@ -230,3 +230,37 @@ elif current_page == "My Wallet":
                 st.rerun()
             else:
                 st.error("Insufficient balance.")
+# Dhundiye jahan "if current_page == "Predictions Zone":" likha hai, uske neeche cards ke baad ye paste karein:
+
+    st.markdown("---")
+    st.subheader("Featured AI Predictions")
+    
+    # Aapka HTML code yahan st.markdown ke andar aayega:
+    html_table = """
+    <table class="nerdy-table">
+        <thead>
+            <tr>
+                <th>Date</th><th>Match Details</th><th>1</th><th>X</th><th>2</th><th>TIP</th><th>Goals</th><th>GG</th><th>Best TIP</th><th>Trust</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>    
+                <td>00:30<br><span class="match-row-details">Finished</span></td>    
+                <td><div class="team-info">FC Cincinnati vs Toronto FC</div></td>    
+                <td>1.85</td><td>3.8</td><td>4.0</td>    
+                <td><span class="neon-text">1</span></td><td>2-3</td><td>No</td>    
+                <td><span class="neon-text">1</span></td><td>4/10</td>
+            </tr>
+            <tr>    
+                <td>01:00<br><span class="match-row-details">Finished</span></td>    
+                <td><div class="team-info">Cuiaba Esporte MT vs EC Bahia BA</div></td>    
+                <td>2.3</td><td>3.2</td><td>3.3</td>    
+                <td><span class="neon-text">GG</span></td><td>GG</td><td>Yes</td>    
+                <td><span class="neon-text">GG</span></td><td>6/10</td>
+            </tr>
+        </tbody>
+    </table>
+    """
+    
+    # Is line ke zariye ye website par show hoga:
+    st.markdown(html_table, unsafe_allow_html=True)
