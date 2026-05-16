@@ -2,9 +2,9 @@ import streamlit as st
 import random
 
 # --- 1. PAGE SETUP & CONFIG ---
-st.set_page_config(page_title="Nerdy Earners | AI Predictions", layout="wide")
+st.set_page_config(page_title="Predict & Earn | Sports & Life Matrix", layout="wide")
 
-# --- 2. PREMIUM CELLULAR BORDER DESIGN ENGINE (CSS) ---
+# --- 2. PREMIUM CELLS & BORDERS DESIGN ENGINE (CSS) ---
 st.markdown("""
 <style>
     /* Pure Matrix Dark UI */
@@ -32,15 +32,16 @@ st.markdown("""
         border-color: #66ff00 !important;
     }
 
-    /* Target Question Block Stylings */
-    .mushkil-question {
-        background: rgba(255, 75, 75, 0.05);
-        border-left: 4px solid #ff4b4b;
-        padding: 10px 15px;
+    /* Daily Life Question Block Stylings */
+    .daily-question {
+        background: rgba(102, 255, 0, 0.03);
+        border-left: 4px solid #66ff00;
+        padding: 12px 15px;
         border-radius: 4px;
         margin-bottom: 15px;
         font-weight: 500;
-        font-size: 0.95rem;
+        font-size: 1rem;
+        color: #e6e8eb;
     }
 
     /* Betting Odd Box Selectors */
@@ -60,7 +61,7 @@ st.markdown("""
         background-color: rgba(102, 255, 0, 0.04) !important;
     }
 
-    /* Green System Confirm Overrides */
+    /* Glowing Green Button Container */
     .sidebar-glowing-btn button {
         background: linear-gradient(135deg, #a5ff33 0%, #66ff00 100%) !important;
         color: #0c0e11 !important;
@@ -69,31 +70,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. SESSION STATE FOR BALANCE & DYNAMIC QUESTIONS ---
+# --- 3. SESSION STATE MANAGEMENT ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'balance' not in st.session_state:
     st.session_state.balance = 1250.00
 
-# Hardcore/Mushkil Betting Questions Pool (Automatic Random Rotator)
-questions_pool = [
-    "Will Asian Handicap Threshold alternative (+1.75) collapse before the 75th minute interval?",
-    "Will Expected Goals (xG) matrix divergence exceed a differential margin of >1.42 at full-time?",
-    "Will tactical operational shifts trigger consecutive booking events within a compressed 10-min window?",
-    "Will counter-pressing conversion rate surpass defensive recovery threshold parameters (Over 64.5%)?",
-    "Will structural defensive shape break down resulting in direct box entry events exceeding 14.5?"
+# Daily Life Questions Pool (Automatic Random Changer)
+daily_questions_pool = [
+    "Will the maximum temperature in Islamabad cross 40°C tomorrow afternoon?",
+    "Will Bitcoin's market value close higher than Ethereum's growth percentage by midnight?",
+    "Will the local stock market index (PSX) close on a positive green note today?",
+    "Will the price of petrol see a decrease or remain stable in the upcoming fuel policy announcement?",
+    "Will the trending tech video on YouTube hit over 1 Million views within the next 12 hours?",
+    "Will it rain in your current city within the next 24 hours according to satellite cloud mapping?",
+    "Will the gold rate per tola experience a downward dip by tomorrow morning's market opening?"
 ]
 
-# Randomize questions automatically on run
-q1 = random.choice(questions_pool)
-q2 = random.choice(questions_pool)
+# Randomize unique questions automatically on run
+q1 = random.choice(daily_questions_pool)
+q2 = random.choice(daily_questions_pool)
 while q2 == q1:
-    q2 = random.choice(questions_pool)
+    q2 = random.choice(daily_questions_pool)
 
 # --- 4. CONTROL PANEL (SIDEBAR) ---
 with st.sidebar:
-    st.title("🔋 Nerdy Earners")
-    st.caption("AI-Powered Match Analytics Engine")
+    st.title("💰 Predict & Earn")
+    st.caption("Turn Your Accurate Forecasts Into Rewards")
 
     if st.session_state.logged_in:
         st.success("Active User: Rabia")
@@ -119,53 +122,54 @@ with st.sidebar:
 
 # --- 5. APP CORE WORKSPACES ---
 if current_page == "Predictions Zone":
-    st.title("🏆 AI Match Matrix Center")
-    st.caption("Select your dynamic edge targets below to authorize stakes.")
+    st.title("🏆 Active Prediction Markets")
+    st.caption("Select your choice below to lock in your stake pool.")
     
-    # Header Technical Analytics Metrics
+    # Header Statistics Trackers
     col1, col2, col3 = st.columns(3)
-    col1.metric("Bankers Track", "4/4 Active Slates")
-    col2.metric("Queue Horizon", "Auto-Cycling Active")
-    col3.metric("Historical Ratio", "82% Confidence Index")
+    col1.metric("Active Players Pool", "1,420 Users Online")
+    col2.metric("Market Horizon", "Dynamic Cycles Active")
+    col3.metric("Platform Payout Ratio", "94.2% Distributed")
 
     st.markdown("---")
+    st.subheader("Live Life & Trend Nodes")
     
     # ------------------ PREMIUM BOX 1 ------------------
     st.markdown('<div class="premium-border-box">', unsafe_allow_html=True)
     m1_t1, m1_t2 = st.columns([3, 1])
-    m1_t1.markdown("⚽ **FC Cincinnati** vs **Toronto FC** &nbsp;|&nbsp; ⏰ *Live Aggregation*")
-    m1_t2.markdown("<span style='float:right; color:#66ff00;'><b>AI Target: 1 (Trust 4/10)</b></span>", unsafe_allow_html=True)
+    m1_t1.markdown("📊 **Market Node #1:** Real-Time Lifestyle Forecast")
+    m1_t2.markdown("<span style='float:right; color:#66ff00;'><b>Pool Multiplier: 2.0x</b></span>", unsafe_allow_html=True)
     
-    # The Automatic Changing Advanced Question
-    st.markdown(f'<div class="mushkil-question">🔥 Complex Market Node: {q1}</div>', unsafe_allow_html=True)
+    # Dynamic Daily Life Question 1
+    st.markdown(f'<div class="daily-question">❓ {q1}</div>', unsafe_allow_html=True)
     
-    # Clean Grid Button Layout Inside Border
+    # Interaction Grid Options
     b1_c1, b1_c2, b1_c3 = st.columns(3)
-    if b1_c1.button("Bullish Edge (Yes) @ 2.15", key="m1_b1"):
-        st.toast("Executing Capital Allocation on Bullish Target Node.")
-    if b1_c2.button("Neutral Matrix (Draw) @ 3.40", key="m1_b2"):
-        st.toast("Executing Capital Allocation on Neutral Target Node.")
-    if b1_c3.button("Bearish Hedge (No) @ 1.95", key="m1_b3"):
-        st.toast("Executing Capital Allocation on Bearish Target Node.")
+    if b1_c1.button("Yes, Definitely @ 1.90", key="m1_b1"):
+        st.toast("Stake allocated to affirmative target node!")
+    if b1_c2.button("No, Highly Unlikely @ 2.10", key="m1_b2"):
+        st.toast("Stake allocated to negative target node!")
+    if b1_c3.button("Highly Uncertain (Draw) @ 3.50", key="m1_b3"):
+        st.toast("Stake allocated to uncertainty bracket!")
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ------------------ PREMIUM BOX 2 ------------------
     st.markdown('<div class="premium-border-box">', unsafe_allow_html=True)
     m2_t1, m2_t2 = st.columns([3, 1])
-    m2_t1.markdown("⚽ **Cuiabá Esporte** vs **EC Bahia BA** &nbsp;|&nbsp; ⏰ *Live Aggregation*")
-    m2_t2.markdown("<span style='float:right; color:#66ff00;'><b>AI Target: GG (Trust 6/10)</b></span>", unsafe_allow_html=True)
+    m2_t1.markdown("📊 **Market Node #2:** Global Financial & Eco Trends")
+    m2_t2.markdown("<span style='float:right; color:#66ff00;'><b>Pool Multiplier: 1.8x</b></span>", unsafe_allow_html=True)
     
-    # The Automatic Changing Advanced Question
-    st.markdown(f'<div class="mushkil-question">🔥 Complex Market Node: {q2}</div>', unsafe_allow_html=True)
+    # Dynamic Daily Life Question 2
+    st.markdown(f'<div class="daily-question">❓ {q2}</div>', unsafe_allow_html=True)
     
-    # Clean Grid Button Layout Inside Border
+    # Interaction Grid Options
     b2_c1, b2_c2, b2_c3 = st.columns(3)
-    if b2_c1.button("Over 2.5 Alternative @ 2.45", key="m2_b1"):
-        st.toast("Executing Capital Allocation on Over Alternative.")
-    if b2_c2.button("Both Score Target @ 1.80", key="m2_b2"):
-        st.toast("Executing Capital Allocation on Dual Scoring Core.")
-    if b2_c3.button("Under 1.5 Alternative @ 3.10", key="m2_b3"):
-        st.toast("Executing Capital Allocation on Under Alternative.")
+    if b2_c1.button("Bullish Upward (Yes) @ 1.75", key="m2_b1"):
+        st.toast("Stake allocated to upward trend line!")
+    if b2_c2.button("Bearish Downward (No) @ 2.25", key="m2_b2"):
+        st.toast("Stake allocated to downward trend line!")
+    if b2_c3.button("Stable Consolidation @ 4.00", key="m2_b3"):
+        st.toast("Stake allocated to flat market equilibrium!")
     st.markdown('</div>', unsafe_allow_html=True)
 
 elif current_page == "Investor Wallet":
