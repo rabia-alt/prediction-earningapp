@@ -28,12 +28,6 @@ st.markdown("""
         width: 100%;
         box-shadow: 0 4px 15px rgba(102, 255, 0, 0.2);
     }
-    
-    /* Global Neon Text Utility */
-    .neon-text {
-        color: #66ff00 !important;
-        font-weight: bold;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -76,7 +70,7 @@ if current_page == "Predictions Zone":
     st.title("🏆 AI Match Center")
     st.caption("Updated Every 5 Minutes")
     
-    # Analytical Header Row Cards (Using Streamlit Native Metrics for 100% Stability)
+    # Analytical Header Row Cards (Highly Stable)
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric(label="Bankers", value="4/4 Tips Won Today")
@@ -86,39 +80,7 @@ if current_page == "Predictions Zone":
         st.metric(label="Success Rate", value="82% Last 30 Days")
 
     st.markdown("---")
-    st.subheader("Featured AI Predictions")
-    
-    # Match Row 1 - Clean Container Grid Layout
-    with st.container(border=True):
-        m1_c1, m1_c2, m1_c3, m1_c4 = st.columns([1, 2, 2, 2])
-        with m1_c1:
-            st.markdown("⏰ **00:30**\n\n🟢 *Finished*")
-        with m1_c2:
-            st.markdown("⚽ **FC Cincinnati** vs **Toronto FC**")
-            st.caption("Goals: **2-3** | GG: **No**")
-        with m1_c3:
-            st.markdown("**Odds Matrix (1-X-2)**")
-            st.code("1.85  |  3.80  |  4.00", language="")
-        with m1_c4:
-            st.markdown("🎯 **AI Best TIP**")
-            st.success("TIP: 1 (Trust: 4/10)")
-            
-    st.markdown("")  # Spacing element
-
-    # Match Row 2 - Clean Container Grid Layout
-    with st.container(border=True):
-        m2_c1, m2_c2, m2_c3, m2_c4 = st.columns([1, 2, 2, 2])
-        with m2_c1:
-            st.markdown("⏰ **01:00**\n\n🟢 *Finished*")
-        with m2_c2:
-            st.markdown("⚽ **Cuiaba Esporte** vs **EC Bahia BA**")
-            st.caption("Goals: **GG** | GG: **Yes**")
-        with m2_c3:
-            st.markdown("**Odds Matrix (1-X-2)**")
-            st.code("2.30  |  3.20  |  3.30", language="")
-        with m2_c4:
-            st.markdown("🎯 **AI Best TIP**")
-            st.success("TIP: GG (Trust: 6/10)")
+    st.info("🔄 AI Predictions are being updated from the server. Check back in a few minutes!")
 
 # WORKSPACE B: INVESTOR WALLET MANAGEMENT
 elif current_page == "Investor Wallet":
