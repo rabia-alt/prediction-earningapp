@@ -151,13 +151,12 @@ with st.sidebar:
 
     st.markdown("---")
     current_page = st.selectbox("Navigate", ["Predictions Zone", "My Wallet"])
-
-# --- 5. MAIN CONTENT ---
+# --- MAIN CODE MEIN YAHAN REPLACE KAREIN ---
 if current_page == "Predictions Zone":
     st.title("🏆 AI Match Center")
     st.caption("Updated Every 5 Minutes")
     
-    # Cards layout
+    # 1. Top Cards Section
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown('<div class="nerdy-card"><h3>Bankers</h3><p class="neon-text">4/4 Tips Won Today</p></div>', unsafe_allow_html=True)
@@ -169,98 +168,63 @@ if current_page == "Predictions Zone":
     st.markdown("---")
     st.subheader("Featured AI Predictions")
     
-    # Custom Rendered Table
+    # 2. Aapka HTML Table Code Yahan Ayega (Ham ne isme styling aur logos bhi add kar diye hain)
     html_table = """
     <table class="nerdy-table">
         <thead>
             <tr>
-                <th>Date</th><th>Match Details</th><th>1</th><th>X</th><th>2</th><th>TIP</th><th>Goals</th><th>GG</th><th>Best TIP</th><th>Trust</th>
+                <th>Date</th>
+                <th>Match Details</th>
+                <th>1</th>
+                <th>X</th>
+                <th>2</th>
+                <th>TIP</th>
+                <th>Goals</th>
+                <th>GG</th>
+                <th>Best TIP</th>
+                <th>Trust</th>
             </tr>
         </thead>
         <tbody>
-    """
-    for match in active_matches_data:
-        html_table += f"""
-        <tr>
-            <td>{match['date']}<br><span class="match-row-details">Finished</span></td>
-            <td><div class="team-info">{match['match'][0]} vs {match['match'][1]}</div></td>
-            <td>{match['odds'][0]}</td><td>{match['odds'][1]}</td><td>{match['odds'][2]}</td>
-            <td><span class="neon-text">{match['tip']}</span></td><td>{match['goals']}</td><td>{match['gg']}</td>
-            <td><span class="neon-text">{match['best_tip']}</span></td><td>{match['trust']}</td>
-        </tr>
-        """
-    html_table += "</tbody></table>"
-    st.markdown(html_table, unsafe_allow_html=True)
-
-elif current_page == "My Wallet":
-    st.title("💰 AI Investor Wallet")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"""
-        <div class="info-panel">
-            <h3>Account Balance</h3>
-            <p style="font-size: 2em; color: #66ff00; font-weight: bold;">PKR {st.session_state.balance:,.2f}</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div class="info-panel">
-            <h3>Account Status</h3>
-            <p>Verification: <span class="neon-text">Verified</span></p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("---")
-    dep_col, with_col = st.columns(2)
-    with dep_col:
-        st.subheader("Deposit (Investment)")
-        dep_amount = st.number_input("Enter Amount (PKR)", min_value=100)
-        trx_id = st.text_input("Transaction ID")
-        if st.button("Submit Deposit"):
-            st.success("Request sent for verification!")
-            
-    with with_col:
-        st.subheader("Withdraw Rewards")
-        with_amount = st.number_input("Withdraw Amount (PKR)", min_value=100)
-        if st.button("Request Withdrawal"):
-            if with_amount <= st.session_state.balance:
-                st.session_state.balance -= with_amount
-                st.success("Withdrawal request submitted!")
-                st.rerun()
-            else:
-                st.error("Insufficient balance.")
-# Dhundiye jahan "if current_page == "Predictions Zone":" likha hai, uske neeche cards ke baad ye paste karein:
-
-    st.markdown("---")
-    st.subheader("Featured AI Predictions")
-    
-    # Aapka HTML code yahan st.markdown ke andar aayega:
-    html_table = """
-    <table class="nerdy-table">
-        <thead>
             <tr>
-                <th>Date</th><th>Match Details</th><th>1</th><th>X</th><th>2</th><th>TIP</th><th>Goals</th><th>GG</th><th>Best TIP</th><th>Trust</th>
+                <td>00:30<br><span class="match-row-details">Finished</span></td>
+                <td>
+                    <div class="team-info" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        FC Cincinnati <img src="https://img.asmedia.epimg.net/resizer/v2/https%3A%2F%2Fas.com%2Fimg%2Fcomunes%2Fdeporte%2Ff%2Fv1.0%2F60x60%2F4284.png?width=30&height=30" width="22"> 
+                        <span style="color: #555;">vs</span> 
+                        <img src="https://img.asmedia.epimg.net/resizer/v2/https%3A%2F%2Fas.com%2Fimg%2Fcomunes%2Fdeporte%2Ff%2Fv1.0%2F60x60%2F2459.png?width=30&height=30" width="22"> Toronto FC
+                    </div>
+                </td>
+                <td><span style="background: #1e222b; padding: 4px 8px; border-radius: 4px; border: 1px solid #2d323f;">1.85</span></td>
+                <td><span style="background: #1e222b; padding: 4px 8px; border-radius: 4px; border: 1px solid #2d323f;">3.80</span></td>
+                <td><span style="background: #1e222b; padding: 4px 8px; border-radius: 4px; border: 1px solid #2d323f;">4.00</span></td>
+                <td><span class="neon-text" style="background: rgba(102, 255, 0, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid #66ff00;">1</span></td>
+                <td>2-3</td>
+                <td>No</td>
+                <td><span class="neon-text">1</span></td>
+                <td><span style="color: #66ff00;">4/10</span></td>
             </tr>
-        </thead>
-        <tbody>
-            <tr>    
-                <td>00:30<br><span class="match-row-details">Finished</span></td>    
-                <td><div class="team-info">FC Cincinnati vs Toronto FC</div></td>    
-                <td>1.85</td><td>3.8</td><td>4.0</td>    
-                <td><span class="neon-text">1</span></td><td>2-3</td><td>No</td>    
-                <td><span class="neon-text">1</span></td><td>4/10</td>
-            </tr>
-            <tr>    
-                <td>01:00<br><span class="match-row-details">Finished</span></td>    
-                <td><div class="team-info">Cuiaba Esporte MT vs EC Bahia BA</div></td>    
-                <td>2.3</td><td>3.2</td><td>3.3</td>    
-                <td><span class="neon-text">GG</span></td><td>GG</td><td>Yes</td>    
-                <td><span class="neon-text">GG</span></td><td>6/10</td>
+            <tr>
+                <td>01:00<br><span class="match-row-details">Finished</span></td>
+                <td>
+                    <div class="team-info" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        Cuiabá <img src="https://ssl.gstatic.com/onebox/media/sports/logos/w47S66f_S_VvKsuVw7Wv8g_48x48.png" width="22"> 
+                        <span style="color: #555;">vs</span> 
+                        <img src="https://ssl.gstatic.com/onebox/media/sports/logos/96m_9un6BOv77Z_A93CqXw_48x48.png" width="22"> EC Bahia BA
+                    </div>
+                </td>
+                <td><span style="background: #1e222b; padding: 4px 8px; border-radius: 4px; border: 1px solid #2d323f;">2.30</span></td>
+                <td><span style="background: #1e222b; padding: 4px 8px; border-radius: 4px; border: 1px solid #2d323f;">3.20</span></td>
+                <td><span style="background: #1e222b; padding: 4px 8px; border-radius: 4px; border: 1px solid #2d323f;">3.30</span></td>
+                <td><span class="neon-text" style="background: rgba(102, 255, 0, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid #66ff00;">GG</span></td>
+                <td>GG</td>
+                <td>Yes</td>
+                <td><span class="neon-text">GG</span></td>
+                <td><span style="color: #66ff00;">6/10</span></td>
             </tr>
         </tbody>
     </table>
     """
     
-    # Is line ke zariye ye website par show hoga:
-    st.markdown(html_table, unsafe_allow_html=True)
+    # 3. Table Render Line
+    st.markdown(html_table, unsafe_allow_html=True)llow_html=True)
