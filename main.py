@@ -54,7 +54,6 @@ st.markdown("""
 # --- 3. GOOGLE SHEETS INTEGRATION LINK ---
 GSHEET_URL = "https://docs.google.com/spreadsheets/d/1EWrF_vJOIXyN7Y03t6rVECmY_YijC3nping9DoNnC-4/edit?usp=sharing"
 
-# Establish Cloud Connection
 try:
     conn = st.connection("gsheets", type=GSheetsConnection)
 except Exception as e:
@@ -81,14 +80,13 @@ if 'q1' not in st.session_state:
 def fetch_users_db():
     if conn:
         try:
-            # Clear cache to get fresh data directly from Google Sheet
             st.cache_data.clear()
             df = conn.read(spreadsheet=GSHEET_URL, worksheet="Users", ttl=0)
             df['Mobile Number'] = df['Mobile Number'].astype(str).str.strip()
             return df
         except:
-            return pd.DataFrame(columns=["Mobile Number", "Password", "Balance"])
-    return pd.DataFrame(columns=["Mobile Number", "Password", "Balance"])
+            return pd.DataFrame(columns=["Name", "Mobile Number", "Password", "Balance"])
+    return pd.DataFrame(columns=["Name", "Mobile Number", "Password", "Balance"])
 
 def sync_user_balance_from_sheet(phone_num):
     df = fetch_users_db()
@@ -96,7 +94,6 @@ def sync_user_balance_from_sheet(phone_num):
     if not user_row.empty:
         st.session_state.balance = float(user_row.iloc[0]['Balance'])
 
-# Live balance update on every action if user is logged in
 if st.session_state.logged_in:
     sync_user_balance_from_sheet(st.session_state.user_phone)
 
@@ -127,21 +124,20 @@ with st.sidebar:
             st.markdown('<div class="sidebar-glowing-btn">', unsafe_allow_html=True)
             if st.button("Create Account & Join"):
                 if phone and password == confirm_pass:
-                    # Check if user already exists in Sheet database
                     users_df = fetch_users_db()
                     if phone in users_df['Mobile Number'].values:
                         st.error("This mobile number is already registered! Please Sign In.")
                     else:
                         if conn:
                             try:
-                                new_user = pd.DataFrame([{"Mobile Number": str(phone), "Password": str(password), "Balance": 20.00}])
+                                new_user = pd.DataFrame([{"Name": "", "Mobile Number": str(phone), "Password": str(password), "Balance": 20.00}])
                                 conn.create(spreadsheet=GSHEET_URL, worksheet="Users", data=new_user)
                                 st.session_state.logged_in = True
                                 st.session_state.user_phone = phone
                                 st.session_state.balance = 20.00
                                 st.success("Registered Successfully! PKR 20 Bonus Added.")
                                 st.rerun()
-                            except Exception as e:
+                            except:
                                 st.error("Database connection busy. Please try again.")
                 else:
                     st.error("Passwords do not match or fields are empty.")
@@ -151,7 +147,6 @@ with st.sidebar:
             if st.button("Sign In Securely"):
                 if phone and password:
                     users_df = fetch_users_db()
-                    # Validate credentials directly from Google Sheet rows
                     matched_user = users_df[(users_df['Mobile Number'] == str(phone)) & (users_df['Password'].astype(str) == str(password))]
                     if not matched_user.empty:
                         st.session_state.logged_in = True
@@ -177,7 +172,7 @@ if current_page == "Predictions Zone":
     if not st.session_state.logged_in:
         st.warning("⚠️ Please Login or Register from the sidebar to place amounts and lock bets.")
 
-    # ------------------ MARKET CARD #1 ------------------
+    # --- MARKET CARD #1 ---
     st.markdown('<div class="premium-border-box">', unsafe_allow_html=True)
     st.markdown("📊 **Market Node #1:** Real-Time Lifestyle Forecast")
     st.markdown(f'<div class="daily-question">❓ {st.session_state.q1}</div>', unsafe_allow_html=True)
@@ -199,34 +194,30 @@ if current_page == "Predictions Zone":
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔥 PLACE & LOCK BET", key="confirm_m1", disabled=st.session_state.m1_bet_placed or not st.session_state.m1_selection):
             if st.session_state.balance >= bet_amt_1 and bet_amt_1 >= 30:
-                # Update local and cloud balance
                 new_bal = st.session_state.balance - bet_amt_1
-                st.session_state.m1_bet_placed = True
                 
                 if conn:
                     try:
-                        # 1. Log Bet Details
+                        # 1. Bets Tab me save karein
                         new_bet = pd.DataFrame([{"Mobile Number": st.session_state.user_phone, "Question": st.session_state.q1, "Selection": st.session_state.m1_selection, "Amount": bet_amt_1, "Status": "Pending"}])
                         conn.create(spreadsheet=GSHEET_URL, worksheet="Bets", data=new_bet)
                         
-                        # 2. Update User's Balance row on Sheet
+                        # 2. Users Tab me balance cut karein
                         all_users = fetch_users_db()
                         all_users.loc[all_users['Mobile Number'] == str(st.session_state.user_phone), 'Balance'] = new_bal
                         conn.update(spreadsheet=GSHEET_URL, worksheet="Users", data=all_users)
                         
+                        st.session_state.m1_bet_placed = True
                         st.session_state.balance = new_bal
-                        st.success(f"Bet Locked! Data pushed to Sheet.")
+                        st.success(f"Bet Locked! Data pushed to 'Bets' tab.")
                         st.rerun()
                     except:
-                        st.error("Database was busy. Bet not recorded.")
+                        st.error("Database connection issue.")
             else:
-                st.error("❌ Insufficient Balance! Minimum PKR 30 required. Please go to 'Investor Wallet' to add money via EasyPaisa.")
-                
-    if st.session_state.m1_bet_placed:
-        st.markdown(f'<p style="color:#66ff00; font-weight:bold;">✅ Active Position Locked on "{st.session_state.m1_selection}"</p>', unsafe_allow_html=True)
+                st.error("❌ Insufficient Balance! Minimum PKR 30 required.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ------------------ MARKET CARD #2 ------------------
+    # --- MARKET CARD #2 ---
     st.markdown('<div class="premium-border-box">', unsafe_allow_html=True)
     st.markdown("📊 **Market Node #2:** Global Financial & Eco Trends")
     st.markdown(f'<div class="daily-question">❓ {st.session_state.q2}</div>', unsafe_allow_html=True)
@@ -249,53 +240,56 @@ if current_page == "Predictions Zone":
         if st.button("🔥 PLACE & LOCK BET", key="confirm_m2", disabled=st.session_state.m2_bet_placed or not st.session_state.m2_selection):
             if st.session_state.balance >= bet_amt_2 and bet_amt_2 >= 30:
                 new_bal = st.session_state.balance - bet_amt_2
-                st.session_state.m2_bet_placed = True
                 
                 if conn:
                     try:
+                        # 1. Bets Tab me save karein
                         new_bet = pd.DataFrame([{"Mobile Number": st.session_state.user_phone, "Question": st.session_state.q2, "Selection": st.session_state.m2_selection, "Amount": bet_amt_2, "Status": "Pending"}])
                         conn.create(spreadsheet=GSHEET_URL, worksheet="Bets", data=new_bet)
                         
+                        # 2. Users Tab me balance cut karein
                         all_users = fetch_users_db()
                         all_users.loc[all_users['Mobile Number'] == str(st.session_state.user_phone), 'Balance'] = new_bal
                         conn.update(spreadsheet=GSHEET_URL, worksheet="Users", data=all_users)
                         
+                        st.session_state.m2_bet_placed = True
                         st.session_state.balance = new_bal
-                        st.success(f"Bet Locked! Data pushed to Sheet.")
+                        st.success(f"Bet Locked! Data pushed to 'Bets' tab.")
                         st.rerun()
                     except:
-                        st.error("Database was busy.")
+                        st.error("Database error.")
             else:
-                st.error("❌ Insufficient Balance! Minimum PKR 30 required. Please go to 'Investor Wallet' to add money via EasyPaisa.")
+                st.error("❌ Insufficient Balance!")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# WORKSPACE B: RESULTS LEDGER
+# WORKSPACE B: RESULTS LEDGER (Live Read from Bets Tab)
 elif current_page == "User Dashboard (Results)":
     st.title("📅 Settlement Matrix & Performance Results")
-    st.caption("Peeche Google Sheet se results change hote hi yahan dashboard automatically update ho jata hai.")
+    st.caption("Peeche Google Sheet se results change hote hi yahan automatic status load ho jata hai.")
     
     if not st.session_state.logged_in:
-        st.warning("Please sign in from the gateway sidebar to view your profile results ledger.")
+        st.warning("Please sign in from the sidebar to view your profile results ledger.")
     else:
-        st.subheader("Live History Log Tracking")
+        st.subheader("Your Real-Time Predictions History")
         if conn:
             try:
                 st.cache_data.clear()
+                # Bets tab se data read karna
                 all_bets = conn.read(spreadsheet=GSHEET_URL, worksheet="Bets", ttl=0)
                 user_bets = all_bets[all_bets['Mobile Number'].astype(str).str.strip() == str(st.session_state.user_phone).strip()]
                 
                 if user_bets.empty:
-                    st.info("Aapne abhi tak koi bet lock nahi ki.")
+                    st.info("Aapne abhi tak koi market lock nahi kiya.")
                 else:
                     for idx, row in user_bets.iterrows():
                         st.markdown('<div class="premium-border-box">', unsafe_allow_html=True)
                         st.markdown(f"❓ **Question:** {row['Question']}")
-                        st.markdown(f"Your Prediction: **{row['Selection']}** | Amount Staked: **PKR {row['Amount']}** | Status: `{row['Status']}`")
+                        st.markdown(f"Your Pick: **{row['Selection']}** | Staked: **PKR {row['Amount']}** | Status: **`{row['Status']}`**")
                         st.markdown('</div>', unsafe_allow_html=True)
             except:
-                st.info("History display pipeline is sleeping. Add a 'Bets' worksheet tab to active.")
+                st.info("Peeche Google Sheet mein 'Bets' naam ka tab/worksheet check karein.")
 
-# WORKSPACE C: INVESTOR WALLET MANAGEMENT
+# WORKSPACE C: INVESTOR WALLET MANAGEMENT (Live Read/Write for Deposits & Withdrawals)
 elif current_page == "Investor Wallet":
     st.title("💰 Capital Allocation & Liquidity")
     
@@ -327,12 +321,12 @@ elif current_page == "Investor Wallet":
             if trx_id and wallet_number and account_title and dep_amount >= 30:
                 if conn:
                     try:
-                        # Append to Deposits Worksheet tab
+                        # Deposits Tab me automatic entry append karna
                         new_dep = pd.DataFrame([{"Mobile Number": st.session_state.user_phone, "Network": "EasyPaisa", "Account Title": account_title, "Amount": dep_amount, "TrxID": trx_id, "Status": "Pending"}])
                         conn.create(spreadsheet=GSHEET_URL, worksheet="Deposits", data=new_dep)
                         st.success(f"Deposit proof pushed to Sheet! Admin (Rabia Hafeez) verifies it soon.")
                     except:
-                        st.error("Database connection issue. Proof not saved.")
+                        st.error("Deposits sheet tab mismatch error.")
             else:
                 st.error("Please fill out all credentials correctly (Min Rs. 30).")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -347,6 +341,7 @@ elif current_page == "Investor Wallet":
             if with_amount > 0 and with_amount <= st.session_state.balance:
                 if conn:
                     try:
+                        # Withdrawals Tab me automatic entry append karna
                         new_with = pd.DataFrame([{"Mobile Number": st.session_state.user_phone, "Network": "EasyPaisa", "Account Number": with_number, "Amount": with_amount, "Status": "Pending"}])
                         conn.create(spreadsheet=GSHEET_URL, worksheet="Withdrawals", data=new_with)
                         st.success(f"Liquidation request dispatched to Sheet.")
