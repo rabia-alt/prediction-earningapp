@@ -59,7 +59,7 @@ if 'logged_in' not in st.session_state:
 if 'user_phone' not in st.session_state:
     st.session_state.user_phone = ""
 if 'balance' not in st.session_state:
-    st.session_state.balance = 0.00  # Default state 0 rakha hai jab tak user sign-in/register na kare
+    st.session_state.balance = 0.00  
 
 # Persistent selection and bet storage
 if 'm1_selection' not in st.session_state:
@@ -79,8 +79,8 @@ if 'm2_bet_amount' not in st.session_state:
 # Mock history data simulation for testing next-day output UI
 if 'history_df' not in st.session_state:
     st.session_state.history_df = pd.DataFrame([
-        {"Date": "16-05-2026", "Question": "Will Bitcoin value close higher than Ethereum today?", "Your Pick": "YES", "Bet Amount": "PKR 10", "Status": "Win", "Reward": "+ PKR 20"},
-        {"Date": "16-05-2026", "Question": "Will maximum temperature cross 40°C?", "Your Pick": "NO", "Bet Amount": "PKR 10", "Status": "Loss", "Reward": "0"}
+        {"Date": "16-05-2026", "Question": "Will Bitcoin value close higher than Ethereum today?", "Your Pick": "YES", "Bet Amount": "PKR 30", "Status": "Win", "Reward": "+ PKR 60"},
+        {"Date": "16-05-2026", "Question": "Will maximum temperature cross 40°C?", "Your Pick": "NO", "Bet Amount": "PKR 50", "Status": "Loss", "Reward": "0"}
     ])
 
 if 'q1' not in st.session_state:
@@ -114,10 +114,10 @@ with st.sidebar:
             st.markdown('<div class="sidebar-glowing-btn">', unsafe_allow_html=True)
             if st.button("Create Account & Join"):
                 if phone and password == confirm_pass:
-                    st.success("Registration Logged! PKR 20 Bonus Credited.")
+                    st.success("Registration Logged! PKR 100 Welcome Bonus Credited.")
                     st.session_state.logged_in = True
                     st.session_state.user_phone = phone
-                    st.session_state.balance = 20.00  # FIXED: New user ko exactly 20 rupees register bonus milega
+                    st.session_state.balance = 100.00  # Bonus set to 100 so user can play multiple Rs. 30 bets
                     st.rerun()
                 else:
                     st.error("Passwords do not match or fields are empty.")
@@ -128,7 +128,7 @@ with st.sidebar:
                 if phone and password:
                     st.session_state.logged_in = True
                     st.session_state.user_phone = phone
-                    st.session_state.balance = 20.00  # Fallback dynamic test sync
+                    st.session_state.balance = 100.00  
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
@@ -140,7 +140,7 @@ with st.sidebar:
 # WORKSPACE A: ACTIVE PREDICTIONS & INPUT SLOTS
 if current_page == "Predictions Zone":
     st.title("🏆 Active Prediction Markets")
-    st.caption("Step 1: Choose Answer | Step 2: Enter Bet Amount | Step 3: Lock Bet")
+    st.caption("Step 1: Choose Answer | Step 2: Enter Bet Amount (Min: PKR 30) | Step 3: Lock Bet")
     st.markdown("---")
 
     if not st.session_state.logged_in:
@@ -163,8 +163,8 @@ if current_page == "Predictions Zone":
     st.markdown("---")
     bet_col1, bet_col2 = st.columns([2, 1])
     with bet_col1:
-        # Minimum bet range adjusted to 10 rupees for small bonus users
-        bet_amt_1 = st.number_input("Enter Bet Amount (PKR) for Node 1", min_value=5, max_value=int(st.session_state.balance) if st.session_state.balance > 5 else 20, step=5, key="amt_1", disabled=st.session_state.m1_bet_placed)
+        # FIXED: min_value is set to 30 now
+        bet_amt_1 = st.number_input("Enter Bet Amount (PKR) for Node 1", min_value=30, max_value=int(st.session_state.balance) if st.session_state.balance >= 30 else 30, step=10, key="amt_1", disabled=st.session_state.m1_bet_placed)
     with bet_col2:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔥 PLACE & LOCK BET", key="confirm_m1", disabled=st.session_state.m1_bet_placed or not st.session_state.m1_selection):
@@ -175,7 +175,7 @@ if current_page == "Predictions Zone":
                 st.success(f"Bet Locked! PKR {bet_amt_1} deducted and tracked.")
                 st.rerun()
             else:
-                st.error("Insufficient Balance!")
+                st.error("Insufficient Balance! Minimum PKR 30 required.")
                 
     if st.session_state.m1_bet_placed:
         st.markdown(f'<p style="color:#66ff00; font-weight:bold;">✅ Active Position: Bet of PKR {st.session_state.m1_bet_amount} locked on "{st.session_state.m1_selection}"</p>', unsafe_allow_html=True)
@@ -199,7 +199,8 @@ if current_page == "Predictions Zone":
     st.markdown("---")
     bet_col3, bet_col4 = st.columns([2, 1])
     with bet_col3:
-        bet_amt_2 = st.number_input("Enter Bet Amount (PKR) for Node 2", min_value=5, max_value=int(st.session_state.balance) if st.session_state.balance > 5 else 20, step=5, key="amt_2", disabled=st.session_state.m2_bet_placed)
+        # FIXED: min_value is set to 30 now
+        bet_amt_2 = st.number_input("Enter Bet Amount (PKR) for Node 2", min_value=30, max_value=int(st.session_state.balance) if st.session_state.balance >= 30 else 30, step=10, key="amt_2", disabled=st.session_state.m2_bet_placed)
     with bet_col4:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔥 PLACE & LOCK BET", key="confirm_m2", disabled=st.session_state.m2_bet_placed or not st.session_state.m2_selection):
@@ -210,7 +211,7 @@ if current_page == "Predictions Zone":
                 st.success(f"Bet Locked! PKR {bet_amt_2} deducted and tracked.")
                 st.rerun()
             else:
-                st.error("Insufficient Balance!")
+                st.error("Insufficient Balance! Minimum PKR 30 required.")
                 
     if st.session_state.m2_bet_placed:
         st.markdown(f'<p style="color:#66ff00; font-weight:bold;">✅ Active Position: Bet of PKR {st.session_state.m2_bet_amount} locked on "{st.session_state.m2_selection}"</p>', unsafe_allow_html=True)
