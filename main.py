@@ -60,7 +60,7 @@ if 'logged_in' not in st.session_state:
 if 'user_phone' not in st.session_state:
     st.session_state.user_phone = ""
 if 'balance' not in st.session_state:
-    st.session_state.balance = 5000.00  # Default balance testing ke liye taake bets lag sakein
+    st.session_state.balance = 5000.00  # Default balance testing ke liye
 
 # Persistent selection and bet storage
 if 'm1_selection' not in st.session_state:
@@ -77,7 +77,7 @@ if 'm2_bet_placed' not in st.session_state:
 if 'm2_bet_amount' not in st.session_state:
     st.session_state.m2_bet_amount = 0
 
-# Mock historical dataset for next-day output demonstration
+# FIXED: Columns match perfectly now to eliminate key errors
 if 'history_df' not in st.session_state:
     st.session_state.history_df = pd.DataFrame([
         {"Date": "15-05-2026", "Question": "Will the price of petrol decrease?", "Your Pick": "YES", "Bet Amount": "PKR 500", "Status": "Win", "Reward": "+ PKR 1,000"},
@@ -152,7 +152,6 @@ if current_page == "Predictions Zone":
     st.markdown("📊 **Market Node #1:** Real-Time Lifestyle Forecast")
     st.markdown(f'<div class="daily-question">❓ {st.session_state.q1}</div>', unsafe_allow_html=True)
     
-    # 1. Answer Selection Buttons
     b1, b2 = st.columns(2)
     if b1.button("🟢 YES, I Predict This", key="btn_q1_yes", disabled=st.session_state.m1_bet_placed):
         st.session_state.m1_selection = "YES"
@@ -162,7 +161,6 @@ if current_page == "Predictions Zone":
     if st.session_state.m1_selection:
         st.info(f"Selected Option: **{st.session_state.m1_selection}**")
     
-    # 2. Bet Amount Fields and Submission
     st.markdown("---")
     bet_col1, bet_col2 = st.columns([2, 1])
     with bet_col1:
@@ -187,7 +185,6 @@ if current_page == "Predictions Zone":
     st.markdown("📊 **Market Node #2:** Global Financial & Eco Trends")
     st.markdown(f'<div class="daily-question">❓ {st.session_state.q2}</div>', unsafe_allow_html=True)
     
-    # 1. Answer Selection Buttons
     b3, b4 = st.columns(2)
     if b3.button("🟢 YES, I Predict This", key="btn_q2_yes", disabled=st.session_state.m2_bet_placed):
         st.session_state.m2_selection = "YES"
@@ -197,7 +194,6 @@ if current_page == "Predictions Zone":
     if st.session_state.m2_selection:
         st.info(f"Selected Option: **{st.session_state.m2_selection}**")
         
-    # 2. Bet Amount Fields and Submission
     st.markdown("---")
     bet_col3, bet_col4 = st.columns([2, 1])
     with bet_col3:
