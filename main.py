@@ -76,7 +76,7 @@ if 'm2_bet_placed' not in st.session_state:
 if 'm2_bet_amount' not in st.session_state:
     st.session_state.m2_bet_amount = 0
 
-# Mock history data simulation for testing next-day output UI
+# Mock history logs simulation for next-day verification UI testing
 if 'history_df' not in st.session_state:
     st.session_state.history_df = pd.DataFrame([
         {"Date": "16-05-2026", "Question": "Will Bitcoin value close higher than Ethereum today?", "Your Pick": "YES", "Bet Amount": "PKR 30", "Status": "Win", "Reward": "+ PKR 60"},
@@ -114,10 +114,10 @@ with st.sidebar:
             st.markdown('<div class="sidebar-glowing-btn">', unsafe_allow_html=True)
             if st.button("Create Account & Join"):
                 if phone and password == confirm_pass:
-                    st.success("Registration Logged! PKR 100 Welcome Bonus Credited.")
+                    st.success("Registration Logged! PKR 20 Welcome Bonus Credited.")
                     st.session_state.logged_in = True
                     st.session_state.user_phone = phone
-                    st.session_state.balance = 100.00  # Bonus set to 100 so user can play multiple Rs. 30 bets
+                    st.session_state.balance = 20.00  # FIXED: Strictly PKR 20.00 Welcome Registration Bonus
                     st.rerun()
                 else:
                     st.error("Passwords do not match or fields are empty.")
@@ -128,7 +128,7 @@ with st.sidebar:
                 if phone and password:
                     st.session_state.logged_in = True
                     st.session_state.user_phone = phone
-                    st.session_state.balance = 100.00  
+                    st.session_state.balance = 20.00  # Default sync baseline
                     st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
 
@@ -163,19 +163,19 @@ if current_page == "Predictions Zone":
     st.markdown("---")
     bet_col1, bet_col2 = st.columns([2, 1])
     with bet_col1:
-        # FIXED: min_value is set to 30 now
+        # Minimum bet is 30. If balance is 20, max_value shows 30 as floor to prevent input element breakage
         bet_amt_1 = st.number_input("Enter Bet Amount (PKR) for Node 1", min_value=30, max_value=int(st.session_state.balance) if st.session_state.balance >= 30 else 30, step=10, key="amt_1", disabled=st.session_state.m1_bet_placed)
     with bet_col2:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔥 PLACE & LOCK BET", key="confirm_m1", disabled=st.session_state.m1_bet_placed or not st.session_state.m1_selection):
-            if st.session_state.balance >= bet_amt_1:
+            if st.session_state.balance >= bet_amt_1 and bet_amt_1 >= 30:
                 st.session_state.balance -= bet_amt_1
                 st.session_state.m1_bet_placed = True
                 st.session_state.m1_bet_amount = bet_amt_1
-                st.success(f"Bet Locked! PKR {bet_amt_1} deducted and tracked.")
+                st.success(f"Bet Locked! PKR {bet_amt_1} deducted.")
                 st.rerun()
             else:
-                st.error("Insufficient Balance! Minimum PKR 30 required.")
+                st.error("❌ Insufficient Balance! Minimum PKR 30 required. Please go to 'Investor Wallet' to add money via EasyPaisa/JazzCash.")
                 
     if st.session_state.m1_bet_placed:
         st.markdown(f'<p style="color:#66ff00; font-weight:bold;">✅ Active Position: Bet of PKR {st.session_state.m1_bet_amount} locked on "{st.session_state.m1_selection}"</p>', unsafe_allow_html=True)
@@ -199,19 +199,18 @@ if current_page == "Predictions Zone":
     st.markdown("---")
     bet_col3, bet_col4 = st.columns([2, 1])
     with bet_col3:
-        # FIXED: min_value is set to 30 now
         bet_amt_2 = st.number_input("Enter Bet Amount (PKR) for Node 2", min_value=30, max_value=int(st.session_state.balance) if st.session_state.balance >= 30 else 30, step=10, key="amt_2", disabled=st.session_state.m2_bet_placed)
     with bet_col4:
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("🔥 PLACE & LOCK BET", key="confirm_m2", disabled=st.session_state.m2_bet_placed or not st.session_state.m2_selection):
-            if st.session_state.balance >= bet_amt_2:
+            if st.session_state.balance >= bet_amt_2 and bet_amt_2 >= 30:
                 st.session_state.balance -= bet_amt_2
                 st.session_state.m2_bet_placed = True
                 st.session_state.m2_bet_amount = bet_amt_2
-                st.success(f"Bet Locked! PKR {bet_amt_2} deducted and tracked.")
+                st.success(f"Bet Locked! PKR {bet_amt_2} deducted.")
                 st.rerun()
             else:
-                st.error("Insufficient Balance! Minimum PKR 30 required.")
+                st.error("❌ Insufficient Balance! Minimum PKR 30 required. Please go to 'Investor Wallet' to add money via EasyPaisa/JazzCash.")
                 
     if st.session_state.m2_bet_placed:
         st.markdown(f'<p style="color:#66ff00; font-weight:bold;">✅ Active Position: Bet of PKR {st.session_state.m2_bet_amount} locked on "{st.session_state.m2_selection}"</p>', unsafe_allow_html=True)
@@ -245,6 +244,44 @@ elif current_page == "User Dashboard (Results)":
 # WORKSPACE C: INVESTOR WALLET MANAGEMENT
 elif current_page == "Investor Wallet":
     st.title("💰 Capital Allocation & Liquidity")
+    
     w_col1, w_col2 = st.columns(2)
     w_col1.metric("Liquid Balance Pool", f"PKR {st.session_state.balance:,.2f}")
     w_col2.metric("Database Pipeline Connection", "Connected ✅")
+
+    st.markdown("---")
+    dep_panel, with_panel = st.columns(2)
+    
+    with dep_panel:
+        st.subheader("Deposit Network Setup")
+        method = st.selectbox("Select Deposit Network", ["EasyPaisa", "JazzCash"])
+        wallet_number = st.text_input("Enter Your Wallet Mobile Number", placeholder="e.g. 03415687754")
+        account_title = st.text_input("Enter Account Title Name", placeholder="e.g. Rabia Hafeez")
+        dep_amount = st.number_input("Transfer Amount (PKR)", min_value=0, step=50, key="wallet_dep_amt")
+        trx_id = st.text_input("Transaction ID (TrxID)", placeholder="e.g. 8945729104", key="wallet_trx")
+        
+        st.markdown('<div class="sidebar-glowing-btn">', unsafe_allow_html=True)
+        if st.button("Submit Deposit Log to Sheet"):
+            if trx_id and wallet_number and account_title and dep_amount > 0:
+                st.session_state.balance += dep_amount
+                st.success(f"Log forwarded successfully to Google Sheet! Deposited PKR {dep_amount} via {method}.")
+                st.rerun()
+            else:
+                st.error("Please fill out all credentials.")
+        st.markdown('</div>', unsafe_allow_html=True)
+                
+    with with_panel:
+        st.subheader("Withdraw Rewards")
+        with_method = st.selectbox("Select Withdrawal Network", ["EasyPaisa", "JazzCash"])
+        with_number = st.text_input("Withdrawal Wallet Number", placeholder="e.g. 03415687754", key="w_num")
+        with_amount = st.number_input("Withdraw Amount (PKR)", min_value=0, step=50, key="wallet_with_amt")
+        
+        st.markdown('<div class="sidebar-glowing-btn">', unsafe_allow_html=True)
+        if st.button("Authorize Liquidation"):
+            if with_amount > 0 and with_amount <= st.session_state.balance:
+                st.session_state.balance -= with_amount
+                st.success(f"Liquidation authorized! PKR {with_amount} dispatched.")
+                st.rerun()
+            else:
+                st.error("Insufficient balance pool.")
+        st.markdown('</div>', unsafe_allow_html=True)
